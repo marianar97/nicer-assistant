@@ -5,7 +5,7 @@ export async function rephraseDirect(input: string): Promise<string> {
   if (!input.trim()) return "";
 
   try {
-    const response = await fetch("/api/ai", {
+    const response = await fetch("https://ai-r2-asset-binding.mariana-ramirezd97.workers.dev/api/ai", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,7 +20,6 @@ export async function rephraseDirect(input: string): Promise<string> {
     }
 
     const data = await response.json();
-    console.log("!@# data", data);
     // Assuming the backend returns an object like { original: '...', transformed: '...' }
     return data.transformed || ""; // Return the transformed text or empty string
   } catch (error) {
