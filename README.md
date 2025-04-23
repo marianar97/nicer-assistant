@@ -8,7 +8,7 @@ It uses Neon as a database, Cloudflare's AI for message conversion, R2 for asset
 
 The AI binding is defined in the `wrangler.toml` file. In the application, the `/api/ai` endpoint uses a text-to-text LLM (Large Language Model) to convert mean messages into polite corporate responses.
 
-The endpoint receives a message and uses it as a prompt for the LLM with specific instructions to reformulate the message in a professional corporate tone:
+The endpoint receives a message and uses it as a prompt for the LLM with specific instructions to reformulate the message in a professional tone:
 
 ```typescript
 app.post("/api/ai", async (c) => {
@@ -17,7 +17,7 @@ app.post("/api/ai", async (c) => {
     {
       role: "system",
       content:
-        "You are a corporate communications specialist. Your job is to take rude, mean, or angry messages and convert them into polite, professional corporate responses. Maintain a formal, positive tone while addressing the core concern from the original message. Keep responses concise and professional.",
+        "You are a corporate communications specialist. Your job is to take rude, mean, or angry messages and convert them into polite corporate responses. Maintain a formal, positive tone while addressing the core concern from the original message. Keep responses concise and professional.",
     },
     {
       role: "user",
