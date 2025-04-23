@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/neon-http";
 import { Hono } from "hono";
 import { users, messages } from "./db/schema";
 import { eq } from "drizzle-orm";
+import { cors } from "hono/cors";
 
 // Helper function to generate a random unique ID
 function generateUniqueId(length = 16) {
@@ -18,11 +19,21 @@ type Bindings = {
   AI: Ai;
 };
 
-
 const app = new Hono<{ Bindings: Bindings }>();
 
+app.use(
+  "/api/*",
+  cors({
+    origin: "https://nicer-assistant.pages.dev",
+    allowMethods: ["POST", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+  })
+);
+
 app.get("/", (c) => {
-  return c.text("Jerk to Nice API - Convert mean messages to polite corporate responses!");
+  return c.text(
+    "Jerk to Nice API - Convert mean messages to polite corporate responses!"
+  );
 });
 
 app.get("/api/users", async (c) => {
@@ -69,12 +80,12 @@ app.post("/api/user", async (c) => {
 
 app.post("/api/ai", async (c) => {
   const { message } = await c.req.json();
+  console.log("!@# message", message);
   const messages_for_ai = [
-    { 
-      role: "system", 
+    {
+      role: "system",
       content: `
       You are a communications specialist. Your job is to take your boss mean and angry message and convert them into polite, professional corporate message. You must keep the original meaning of the message, but make it more positive and professional. 
-      
       You MUST only respond with the transformed message, nothing else.
 
       <example>
@@ -94,7 +105,7 @@ app.post("/api/ai", async (c) => {
       "I don't have time for this"
       </transformed>
       </example2>
-      `
+      `,
     },
     {
       role: "user",
@@ -105,25 +116,25 @@ app.post("/api/ai", async (c) => {
     "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     { messages: messages_for_ai }
   );
-  
+
   // Extract the text from the AI response
   let transformedMessage = "";
-  if (typeof aiResponse === 'object' && aiResponse !== null) {
+  if (typeof aiResponse === "object" && aiResponse !== null) {
     // If the response is in the expected format
     transformedMessage = aiResponse.response || "";
   } else {
     // Fallback handling for other response formats
     transformedMessage = String(aiResponse);
   }
-  
+
   // Create a unique ID for this message
   const messageId = generateUniqueId();
-  
+
   // Save both the original and transformed message to the database
   try {
     const sql = neon(c.env.DATABASE_URL);
     const db = drizzle(sql);
-    
+
     // Use custom ID field instead of relying on auto-increment
     const [savedMessage] = await db
       .insert(messages)
@@ -133,11 +144,11 @@ app.post("/api/ai", async (c) => {
         transformed_message: transformedMessage,
       })
       .returning();
-      
+
     return c.json({
       original: message,
       transformed: transformedMessage,
-      id: savedMessage.id
+      id: savedMessage.id,
     });
   } catch (error) {
     console.error("Database error:", error);
@@ -146,17 +157,16 @@ app.post("/api/ai", async (c) => {
       original: message,
       transformed: transformedMessage,
       id: messageId,
-      error: "Failed to save message to database"
+      error: "Failed to save message to database",
     });
   }
 });
 
-
 app.post("/api/ai/inverse", async (c) => {
   const { message } = await c.req.json();
   const messages_for_ai = [
-    { 
-      role: "system", 
+    {
+      role: "system",
       content: `
       You are a neurodivergent-friendly translator. Your job is to take corporate jargon, unclear business speak, or complex professional language and translate it into clear, literal, and concise language.
       
@@ -256,7 +266,7 @@ app.post("/api/ai/inverse", async (c) => {
           "I'm about to strongly disagree or criticize you."
         </simplified>
       </example9>
-      `
+      `,
     },
     {
       role: "user",
@@ -267,25 +277,25 @@ app.post("/api/ai/inverse", async (c) => {
     "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     { messages: messages_for_ai }
   );
-  
+
   // Extract the text from the AI response
   let transformedMessage = "";
-  if (typeof aiResponse === 'object' && aiResponse !== null) {
+  if (typeof aiResponse === "object" && aiResponse !== null) {
     // If the response is in the expected format
     transformedMessage = aiResponse.response || "";
   } else {
     // Fallback handling for other response formats
     transformedMessage = String(aiResponse);
   }
-  
+
   // Create a unique ID for this message
   const messageId = generateUniqueId();
-  
+
   // Save both the original and transformed message to the database
   try {
     const sql = neon(c.env.DATABASE_URL);
     const db = drizzle(sql);
-    
+
     // Use custom ID field instead of relying on auto-increment
     const [savedMessage] = await db
       .insert(messages)
@@ -295,11 +305,11 @@ app.post("/api/ai/inverse", async (c) => {
         transformed_message: transformedMessage,
       })
       .returning();
-      
+
     return c.json({
       original: message,
       transformed: transformedMessage,
-      id: savedMessage.id
+      id: savedMessage.id,
     });
   } catch (error) {
     console.error("Database error:", error);
@@ -308,7 +318,7 @@ app.post("/api/ai/inverse", async (c) => {
       original: message,
       transformed: transformedMessage,
       id: messageId,
-      error: "Failed to save message to database"
+      error: "Failed to save message to database",
     });
   }
 });
@@ -329,12 +339,16 @@ app.get("/api/messages/:id", async (c) => {
   const sql = neon(c.env.DATABASE_URL);
   const db = drizzle(sql);
 
-  const message = await db.select().from(messages).where(eq(messages.id, id)).limit(1);
-  
+  const message = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.id, id))
+    .limit(1);
+
   if (message.length === 0) {
     return c.json({ error: "Message not found" }, 404);
   }
-  
+
   return c.json(message[0]);
 });
 
@@ -342,27 +356,33 @@ app.get("/api/messages/:id", async (c) => {
  * Serve a simplified api specification for your API
  * As of writing, this is just the list of routes and their methods.
  */
-app.get("/openapi.json", c => {
+app.get("/openapi.json", (c) => {
   // @ts-expect-error - @fiberplane/hono is in beta and still not typed correctly
-  return c.json(createOpenAPISpec(app, {
-    openapi: "3.0.0",
-    info: {
-      title: "Message Transformer API",
-      version: "1.0.0",
-      description: "An API with two modes: 1) Converts rude messages into polite corporate responses, and 2) Converts corporate jargon into clear, literal language for neurodivergent users."
-    },
-  }))
+  return c.json(
+    createOpenAPISpec(app, {
+      openapi: "3.0.0",
+      info: {
+        title: "Message Transformer API",
+        version: "1.0.0",
+        description:
+          "An API with two modes: 1) Converts rude messages into polite corporate responses, and 2) Converts corporate jargon into clear, literal language for neurodivergent users.",
+      },
+    })
+  );
 });
 
 /**
  * Mount the Fiberplane api explorer to be able to make requests against your API.
- * 
+ *
  * Visit the explorer at `/fp`
  */
-app.use("/fp/*", createFiberplane({
-  app,
-  openapi: { url: "/openapi.json" }
-}));
+app.use(
+  "/fp/*",
+  createFiberplane({
+    app,
+    openapi: { url: "/openapi.json" },
+  })
+);
 
 export default app;
 

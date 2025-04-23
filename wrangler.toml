@@ -14,15 +14,5 @@ enabled = true
 [assets]
 directory = "gentle-response-hub/dist"
 
-[[r2_buckets]]
-bucket_name = "www"
-binding = "BUCKET"
-
-# [[r2_buckets]]
-# binding = "MY_BUCKET"
-# bucket_name = "my-bucket"
-
-
-
- [ai]
- binding = "AI"
+[ai]
+binding = "AI"
