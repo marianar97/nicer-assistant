@@ -33,7 +33,7 @@ const Index = () => {
           </h1>
         </div>
         <p className="text-gray-600 text-md md:text-lg">
-          Enter a direct or blunt phrase, and we’ll suggest a more considerate alternative.{" "}
+          Enter a direct or blunt phrase, and we'll suggest a more considerate alternative.{" "}
           <span className="inline-flex items-center"><MessageCircle className="w-4 h-4 mx-1 text-blue-400"/>No judgment—everyone deserves support.</span>
         </p>
       </div>
